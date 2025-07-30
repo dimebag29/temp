@@ -85,7 +85,7 @@ for index, transform in enumerate(transforms):
     #output_file_path=fr'{output_path}Output_{index}_%04d.jpg'
     output_file_path=fr'{output_path}{filiname}_%04d_{index}.jpg'
 
-    # v360ライブラリのオプション
+    # v360ライブラリのオプション (16:9にする時は 'h_fov=121.28', 'v_fov=90', 'w=2587', 'h=1455')
     v360_options = ':'.join([
     'input=e', # Equirectangular projection.
     'output=rectilinear', # Regular video.
