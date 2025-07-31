@@ -1,10 +1,12 @@
 import subprocess
 import os
+import winsound
+import time
 
 # 動画を保存しているフォルダ　作業フォルダ
-path = r'C:\Users\2\Desktop\フォトグラメトリ\16 360Test' + '\\'
+path = r'D:\Photogrammetry\111 ZikkaToOziityannTi' + '\\'
 # ファイル名 (拡張子は含まず)
-filiname ='VID_20250718_092343_00_003_Short'
+filiname ='VID_20250718_092343_00_003'
 # 拡張子名
 extension ='mp4'
 
@@ -77,6 +79,8 @@ brightness = 0
 gamma = 1.0
 
 
+winsound.PlaySound("MailBeep", winsound.SND_ALIAS)
+
 # 各視点で書き出す
 for index, transform in enumerate(transforms):
 
@@ -111,4 +115,6 @@ for index, transform in enumerate(transforms):
     subprocess.call(command, shell=True)
 
 
-
+winsound.PlaySound("MailBeep", winsound.SND_ALIAS)
+time.sleep(1)
+winsound.PlaySound("MailBeep", winsound.SND_ALIAS)
