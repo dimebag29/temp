@@ -1,3 +1,6 @@
+# Python 3.12
+# pip install transformers timm torch torchvision numpy pillow
+
 import os
 import torch
 import numpy as np
