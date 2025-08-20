@@ -1,3 +1,10 @@
+# GTX1080
+# Python         3.12.0
+
+# torch          2.7.1+cu118
+# torchaudio     2.7.1+cu118
+# torchvision    0.22.1+cu118
+
 import os
 import time
 import torch
@@ -17,24 +24,43 @@ feature_extractor = SegformerFeatureExtractor.from_pretrained("nvidia/segformer-
 model = SegformerForSemanticSegmentation.from_pretrained("nvidia/segformer-b2-finetuned-ade-512-512")
 model.eval()
 
+# CUDAデバイス設定
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+model.to(device)
+
+# 半精度推論を有効化（VRAM削減＆高速化）GTX1080はTensorCoreがないので使えない
+use_fp16 = False
+if use_fp16 and device.type == "cuda":
+    model.half()
+
 # ADE20Kにおける "sky" クラスのID
 sky_class_id = 2
 tile_size = 512
 
 # 空透過処理
 def process_tile(tile_img):
-    inputs = feature_extractor(images=tile_img, return_tensors="pt")
+    # 画像を前処理してGPUに送る
+    inputs = feature_extractor(images=tile_img, return_tensors="pt").to(device)
+    if use_fp16 and device.type == "cuda":
+        inputs = {k: v.half() if torch.is_floating_point(v) else v for k, v in inputs.items()}
+
     with torch.no_grad():
         outputs = model(**inputs)
         logits = outputs.logits
+
+        # GPU上でargmax → CPUに戻す
         pred = logits.argmax(dim=1)[0].cpu().numpy()
+
+    # マスク生成
     mask = Image.fromarray(pred.astype(np.uint8)).resize(tile_img.size, resample=Image.NEAREST)
     mask = np.array(mask)
 
-    # 1px膨張処理
+    # 1px膨張処理（CPU側でOK）
     sky_mask = (mask == sky_class_id)
     sky_mask_dilated = binary_dilation(sky_mask, structure=np.ones((3, 3)))
 
+    # αチャンネル適用
     alpha = np.where(sky_mask_dilated, 0, 255).astype(np.uint8)
     tile_rgba = tile_img.convert("RGBA")
     tile_np = np.array(tile_rgba)
