@@ -1,9 +1,12 @@
 import os
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFile
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing
 from tqdm import tqdm  # 進捗バー表示（pip install tqdm）
+
+# 壊れた画像（truncated）も読み込み許可
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 # 入力フォルダと出力フォルダ
 input_folder = r""
@@ -28,9 +31,13 @@ def process_file(filename):
     output_filename = os.path.splitext(filename)[0] + ".jpg"
     output_path = os.path.join(output_folder, output_filename)
 
-    # RGBAで読み込み → NumPy配列に変換
-    img = Image.open(input_path).convert("RGBA")
-    arr = np.array(img, dtype=np.uint8)
+    try:
+        # RGBAで読み込み → NumPy配列に変換
+        img = Image.open(input_path).convert("RGBA")
+        arr = np.array(img, dtype=np.uint8)
+    except Exception as e:
+        print(f"⚠️ {filename} の読み込みに失敗しました: {e}")
+        return None
 
     # 塗りつぶす高さ
     target_height = int(arr.shape[0] * fill_ratio)
@@ -40,7 +47,11 @@ def process_file(filename):
     arr[:target_height][mask] = fill_color
 
     # RGBに変換してJPEG保存
-    Image.fromarray(arr[..., :3]).save(output_path, "JPEG", quality=100)
+    try:
+        Image.fromarray(arr[..., :3]).save(output_path, "JPEG", quality=100)
+    except Exception as e:
+        print(f"⚠️ {filename} の保存に失敗しました: {e}")
+        return None
 
     return filename
 
@@ -50,7 +61,6 @@ if __name__ == "__main__":
 
     # CPUコア数
     max_workers = multiprocessing.cpu_count()
-
     print(f"CPUコア数: {max_workers} で並列処理を実行します。")
 
     # 並列処理＋進捗バー
