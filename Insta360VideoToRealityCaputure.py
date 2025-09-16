@@ -2,7 +2,7 @@ import subprocess
 import os
 import winsound
 import time
-from tqdm import tqdm  # pip install tqdm
+from tqdm import tqdm
 
 # 複数ファイルをリストに入れる
 fullpaths = [
@@ -48,7 +48,7 @@ with tqdm(total=total_steps, desc="Processing", unit="task") as pbar:
 
         for index, transform in enumerate(transforms):
             # 出力ファイル名
-            output_file_path = fr'{output_path}{filiname}_%04d_{index}.jpg'
+            output_file_path = fr'{output_path}{filiname}_%04d_{index}.png'
 
             # v360オプション
             v360_options = ':'.join([
@@ -80,3 +80,4 @@ with tqdm(total=total_steps, desc="Processing", unit="task") as pbar:
 winsound.PlaySound("MailBeep", winsound.SND_ALIAS)
 time.sleep(1)
 winsound.PlaySound("MailBeep", winsound.SND_ALIAS)
+
