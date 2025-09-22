@@ -16,20 +16,25 @@ output_folder = r""
 fill_color = np.array([67, 148, 240, 255], dtype=np.uint8)
 
 # 塗りつぶす割合 (上からの高さの比率)
-fill_ratio = 0.5
+fill_ratio = 0.65
 
 # 出力フォルダがなければ作成
 os.makedirs(output_folder, exist_ok=True)
 
 
 def process_file(filename):
-    """1枚の画像を処理してJPEG保存する"""
+    """1枚の画像を処理してPNG保存する（既存ファイルがあればスキップ）"""
     if not filename.lower().endswith(".png"):
         return None
 
     input_path = os.path.join(input_folder, filename)
-    output_filename = os.path.splitext(filename)[0] + ".jpg"
+    output_filename = os.path.splitext(filename)[0] + ".png"
     output_path = os.path.join(output_folder, output_filename)
+
+    # すでに同名ファイルが存在する場合はスキップ
+    if os.path.exists(output_path):
+        print(f"⚠️ {output_filename} は既に存在するためスキップしました")
+        return None
 
     try:
         # RGBAで読み込み → NumPy配列に変換
@@ -46,9 +51,9 @@ def process_file(filename):
     mask = arr[:target_height, :, 3] == 0
     arr[:target_height][mask] = fill_color
 
-    # RGBに変換してJPEG保存
+    # PNG保存（アルファチャンネル保持）
     try:
-        Image.fromarray(arr[..., :3]).save(output_path, "JPEG", quality=100)
+        Image.fromarray(arr, mode="RGBA").save(output_path, "PNG")
     except Exception as e:
         print(f"⚠️ {filename} の保存に失敗しました: {e}")
         return None
